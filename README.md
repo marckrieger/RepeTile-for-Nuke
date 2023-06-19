@@ -1,4 +1,4 @@
-# RepeTile-for-Nuke
+# RepeTile for Nuke
 
 This is a Nuke Gizmo that allows you to repeat a texture image / sequence creating a grid out of it. It also allows you to blur the edges to get smooth borders in between the repetitions.
 
