@@ -1,0 +1,153 @@
+#! C:/Program Files/Nuke14.0v3/nuke-14.0.3.dll -nx
+version 14.0 v3
+Gizmo {
+ addUserKnob {20 User}
+ addUserKnob {3 repeatX l "repeat x"}
+ addUserKnob {3 repeatY l "repeat y"}
+ addUserKnob {6 resize_box l "resize box" +STARTLINE}
+ resize_box true
+ addUserKnob {22 repeat T "# Get box size\ngizmo = nuke.thisNode()\ngizmoName = gizmo.knob('name').getValue()\ninputNode = gizmo.input(0)\nboxWidth = inputNode.format().width()\nboxHeight = inputNode.format().height()\n\n\n# Go inside Gizmo\ngizmo.begin()\n\n\n# Delete previously created nodes\ncreatedTransformNodes = nuke.allNodes('Transform')\nfor node in createdTransformNodes:\n    if 'TransformX' in node\['name'].value() or 'TransformY' in node\['name'].value():\n        nuke.delete(node)\ncreatedMergeNodes = nuke.allNodes('Merge')\nfor node in createdMergeNodes:\n    nuke.delete(node)\ntry:\n    nuke.delete(nuke.toNode('Reformat1'))\nexcept:\n    pass\n\n\n# Get inputs from properties tab\nreformatBool = bool(gizmo.knob('resize_box').getValue())\nrepeatX = int(gizmo.knob('repeatX').getValue())\nrepeatY = int(gizmo.knob('repeatY').getValue())\n\n\n# Create X repetitions\nfor x in range(1, repeatX + 1):\n    TransformXx = 'TransformX' + str(x)\n    TransformX0 = 'TransformX' + str(x-1)\n    MergeXx = 'MergeX' + str(x)\n    MergeX0 = 'MergeX' + str(x-1)\n    nodeTransformX0 = nuke.toNode(TransformX0)\n    nodeMergeX0 = nuke.toNode(MergeX0)\n    nuke.nodes.Transform(name = TransformXx, inputs = \[nodeTransformX0], translate = str('-' + gizmoName + '.blur_edges+' + str(boxWidth) + ' 0'))\n    nodeTransformXx = nuke.toNode(TransformXx)\n    nuke.nodes.Merge(name = MergeXx, inputs = \[nodeMergeX0, nodeTransformXx], operation = 'under')\n    nodeMergeXx = nuke.toNode(MergeXx)\n\n\n# Create Y repetitions\nfor y in range(1, repeatY + 1):\n    TransformYy = 'TransformY' + str(y)\n    TransformY0 = 'TransformY' + str(y-1)\n    MergeYy = 'MergeY' + str(y)\n    MergeY0 = 'MergeY' + str(y-1)\n    nodeTransformY0 = nuke.toNode(TransformY0)\n    nodeMergeY0 = nuke.toNode(MergeY0)\n    nuke.nodes.Transform(name = TransformYy, inputs = \[nodeTransformY0], translate = str('0 -' + gizmoName + '.blur_edges+' + str(boxHeight)))\n    nodeTransformYy = nuke.toNode(TransformYy)\n    nuke.nodes.Merge(name = MergeYy, inputs = \[nodeMergeY0, nodeTransformYy], operation = 'under')\n    nodeMergeYy = nuke.toNode(MergeYy)\n\n\n# Connect repetitions to tree\noutputX = nuke.toNode('OutputX')\noutputY = nuke.toNode('OutputY')\nlastMergeX = nuke.toNode(str('MergeX' + str(repeatX)))\noutputX.setInput(0, lastMergeX)\nlastMergeY = nuke.toNode(str('MergeY' + str(repeatY)))\noutputY.setInput(0, lastMergeY)\n\n\n# Adjust box size\nif reformatBool:\n    Reformat1 = nuke.nodes.Reformat(inputs = \[outputY], type = 'to box', box_width = str('-' + gizmoName + '.blur_edges*' + str(repeatX+1) + '+' + str(boxWidth*(repeatX+1))), box_height = str('-' + gizmoName + '.blur_edges*' + str(repeatY+1) + '+' + str(boxHeight*(repeatY+1))), resize = 'none', center = 0)\n    output = nuke.toNode('Output1')\n    output.setInput(0, Reformat1)" +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {7 blur_edges l "blur edges" R 0 200}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -360
+  ypos -192
+ }
+ Shuffle2 {
+  fromInput1 {{0} B}
+  fromInput2 {{0} B}
+  mappings "4 rgba.red 0 0 rgba.red 0 0 rgba.green 0 1 rgba.green 0 1 rgba.blue 0 2 rgba.blue 0 2 white -1 -1 rgba.alpha 0 3"
+  name Shuffle1
+  xpos -360
+  ypos -104
+ }
+set N2380d400 [stack 0]
+ Dot {
+  name Dot2
+  xpos -456
+  ypos -101
+ }
+set N2380cc00 [stack 0]
+ Transform {
+  center {1024 778}
+  name BlackOutside1
+  xpos -658
+  ypos -104
+ }
+ Dilate {
+  channels alpha
+  size {{"(-\[lindex \[split \[full_name \[topnode]] \".\"] 0].blur_edges) /2"}}
+  name Dilate1
+  xpos -658
+  ypos -80
+ }
+ Blur {
+  channels alpha
+  size {{"\[lindex \[split \[full_name \[topnode]] \".\"] 0].blur_edges /2"}}
+  crop false
+  name Blur1
+  xpos -658
+  ypos -44
+ }
+ Crop {
+  box {0 0 {"\[lindex \[split \[full_name \[topnode]] \".\"] 0].blur_edges"} {"\[lindex \[split \[full_name \[topnode]] \".\"] 0].blur_edges"}}
+  crop false
+  name Crop1
+  xpos -658
+  ypos -8
+ }
+ Mirror2 {
+  flip true
+  flop true
+  name Mirror2_1
+  xpos -658
+  ypos 16
+ }
+push $N2380cc00
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  xpos -490
+  ypos 10
+ }
+ Premult {
+  name Premult2
+  xpos -490
+  ypos 46
+ }
+ Dot {
+  name Dot4
+  xpos -456
+  ypos 95
+ }
+push $N2380d400
+ Crop {
+  name BlackOutside0
+  xpos -360
+  ypos -80
+ }
+ Switch {
+  inputs 2
+  which {{"\[lindex \[split \[full_name \[topnode]] \".\"] 0].blur_edges" x1 0}}
+  name Switch1
+  xpos -360
+  ypos 92
+ }
+ Dot {
+  name MergeX0
+  label "\[value this.name]"
+  xpos -326
+  ypos 137
+ }
+set N2068b000 [stack 0]
+ Dot {
+  name TransformX0
+  label "\[value this.name]"
+  xpos -546
+  ypos 137
+ }
+push $N2068b000
+ Dot {
+  name OutputX
+  label "\[value this.name]"
+  xpos -326
+  ypos 850
+ }
+set N2068ac00 [stack 0]
+ Dot {
+  name MergeY0
+  label "\[value this.name]"
+  xpos -326
+  ypos 903
+ }
+ Dot {
+  name OutputY
+  label "\[value this.name]"
+  xpos -326
+  ypos 1590
+ }
+ Output {
+  name Output1
+  xpos -360
+  ypos 1708
+ }
+push $N2068ac00
+ Dot {
+  name Dot5
+  xpos -546
+  ypos 850
+ }
+ Dot {
+  name TransformY0
+  label "\[value this.name]"
+  note_font Verdana
+  note_font_color 0xffffffff
+  xpos -546
+  ypos 903
+ }
+end_group
